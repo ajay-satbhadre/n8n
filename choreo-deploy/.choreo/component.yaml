@@ -1,0 +1,18 @@
+# Choreo component descriptor for n8n
+# Ref: https://wso2.com/engineering-platform/developer-platform/docs/develop-components/develop-services/develop-a-service-with-docker/
+apiVersion: core.choreo.dev/v1beta1
+kind: Component
+metadata:
+  name: n8n
+  annotations:
+    core.choreo.dev/component-description: "n8n – workflow automation platform"
+spec:
+  type: Service
+  source:
+    git:
+      revision: main
+  buildConfig:
+    buildPreset: Dockerfile
+    # Path is relative to the repo root (or the component root set in the console)
+    dockerfilePath: choreo-deploy/Dockerfile
+    dockerContext: choreo-deploy

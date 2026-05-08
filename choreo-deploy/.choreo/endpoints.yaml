@@ -1,0 +1,14 @@
+# Choreo endpoint descriptor for n8n
+# Exposes the n8n web UI (port 5678) as a Public HTTP service.
+# Ref: https://wso2.com/engineering-platform/developer-platform/docs/develop-components/configure-endpoints/
+version: 0.1
+endpoints:
+  - name: n8n-ui
+    displayName: n8n Web UI
+    service:
+      port: 5678
+      basePath: /
+    type: REST
+    networkVisibilities:
+      - Public
+    schemaFilePath: ""   # leave blank; n8n does not ship an OpenAPI spec file
