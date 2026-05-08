@@ -1,27 +1,21 @@
 # ============================================================
 # n8n on Choreo (WSO2 Developer Platform)
 # ------------------------------------------------------------
-# Choreo enforces non-root container execution.
+# Choreo enforces non-root container execution with UID 10000-20000.
 # The official n8n image runs as 'node' (UID 1000).
-# This Dockerfile re-maps ownership to UID 10001 (10000-20000 range).
+# We remap the existing 'node' user to UID/GID 10001 so all PATH
+# and entrypoint wiring from the base image is preserved.
 # ============================================================
 FROM n8nio/n8n:latest
 
 USER root
 
-# Create a dedicated group + user with UID/GID 10001
-RUN addgroup -S -g 10001 n8ngroup \
-    && adduser  -S -u 10001 -G n8ngroup n8nuser \
-    && mkdir -p /home/n8nuser/.n8n \
-    && chown -R 10001:10001 /home/n8nuser
+# Remap the existing 'node' user/group from UID/GID 1000 → 10001
+# using sed (no external tools needed)
+RUN sed -i "s/^node:x:1000:1000:/node:x:10001:10001:/" /etc/passwd \
+    && sed -i "s/^node:x:1000:/node:x:10001:/" /etc/group \
+    && chown -R 10001:10001 /home/node
 
-# Tell n8n where to store its data
-ENV HOME=/home/n8nuser
-ENV N8N_USER_FOLDER=/home/n8nuser/.n8n
-
-# Drop privileges — USER directive value must be 10000–20000
 USER 10001
 
 EXPOSE 5678
-
-CMD ["n8n", "start"]
