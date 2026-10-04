@@ -5,7 +5,7 @@ kind: Component
 metadata:
   name: n8n
   annotations:
-    core.choreo.dev/component-description: "n8n – workflow automation platform"
+    core.choreo.dev/component-description: "n8n: workflow automation platform"
 spec:
   type: Service
   source:
@@ -16,3 +16,48 @@ spec:
     # Path is relative to the repo root (or the component root set in the console)
     dockerfilePath: choreo-deploy/Dockerfile
     dockerContext: choreo-deploy
+  template:
+    spec:
+      replicas: 1
+      containers:
+        - name: main
+          # image will be built from the Dockerfile above
+          image: ${IMAGE}
+          ports:
+            - name: http
+              containerPort: 5678
+          env:
+            - name: N8N_PROTOCOL
+              value: "https"
+            - name: N8N_HOST
+              value: "de8d702d-8453-479f-ab66-3bb28d3ea359.e1-us-east-azure.choreoapps.dev"
+            - name: N8N_PORT
+              # Use the container's internal HTTP port. Choreo handles external TLS/443.
+              value: "5678"
+            - name: N8N_TRUSTED_ORIGINS
+              # include both the external Choreo URL and the internal service hostname
+              value: "https://de8d702d-8453-479f-ab66-3bb28d3ea359.e1-us-east-azure.choreoapps.dev,n8n-1819210803.dp-development-agents-42877-1473050078"
+            - name: N8N_EDITOR_BASE_URL
+              # Editor uses this URL to form requests back to the server (include https://)
+              value: "https://de8d702d-8453-479f-ab66-3bb28d3ea359.e1-us-east-azure.choreoapps.dev"
+            - name: PATH
+              value: "/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin"
+            
+            - name: N8N_PUSH_BACKEND
+              value: "sse"
+
+          volumeMounts:
+            - name: cache
+              mountPath: /home/node/.cache
+            # persistent config mount is expected to be provided by the platform
+            - name: n8n-data
+              mountPath: /home/node/.n8n
+      volumes:
+        - name: cache
+          emptyDir: {}
+        # `n8n-data` should be bound to the persistent volume you provision in Choreo
+        - name: n8n-data
+          # Free Choreo plan doesn't provide persistent volumes; use ephemeral storage.
+          emptyDir: {}
+      # Informational: data in `n8n-data` will be ephemeral on free plan.
+      # Consider exporting workflows, credentials and setting ENCRYPTION_KEY via env.
